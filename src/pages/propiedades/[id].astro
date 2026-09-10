@@ -284,17 +284,167 @@ const breadcrumbSchema = {
         )
       }
 
+      <!-- Visor de Imágenes en Pantalla Completa -->
+      <div
+        id="imageLightbox"
+        class="fixed inset-0 z-[100] hidden items-center justify-center bg-deepest/95 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Visor de imágenes"
+      >
+        <button
+          type="button"
+          id="lightboxClose"
+          class="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-light transition-colors hover:bg-white/20"
+          aria-label="Cerrar visor"
+        >
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          id="lightboxPrev"
+          class="absolute left-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-light transition-colors hover:bg-white/20 sm:left-6 sm:h-12 sm:w-12"
+          aria-label="Imagen anterior"
+        >
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <img
+          id="lightboxImage"
+          src=""
+          alt=""
+          class="max-h-[85vh] max-w-[90vw] select-none object-contain"
+        />
+
+        <button
+          type="button"
+          id="lightboxNext"
+          class="absolute right-2 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-light transition-colors hover:bg-white/20 sm:right-6 sm:h-12 sm:w-12"
+          aria-label="Imagen siguiente"
+        >
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        <div
+          id="lightboxCounter"
+          class="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-1.5 font-heading text-sm text-light sm:bottom-6"
+        >
+        </div>
+      </div>
+
       <script>
+        let lightboxKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
+
         function initGallery() {
           const mainImage = document.getElementById(
             "mainImage",
-          ) as HTMLImageElement;
+          ) as HTMLImageElement | null;
           const thumbnails = document.querySelectorAll(".gallery-thumbnail");
           const thumbnailScroll = document.getElementById("thumbnailScroll");
           const scrollLeftBtn = document.getElementById("scrollLeft");
           const scrollRightBtn = document.getElementById("scrollRight");
 
-          if (!mainImage || thumbnails.length === 0) return;
+          if (!mainImage) return;
+
+          // Visor de imágenes en pantalla completa: se abre al hacer clic en la
+          // imagen principal o en cualquier miniatura. Funciona incluso con una
+          // sola foto (sin miniaturas), mostrando solo la imagen principal.
+          const galleryImages =
+            thumbnails.length > 0
+              ? Array.from(thumbnails).map(
+                  (t) => t.getAttribute("data-image") || "",
+                )
+              : [mainImage.src];
+
+          const lightbox = document.getElementById("imageLightbox");
+          const lightboxImage = document.getElementById(
+            "lightboxImage",
+          ) as HTMLImageElement | null;
+          const lightboxCounter = document.getElementById("lightboxCounter");
+          const lightboxClose = document.getElementById("lightboxClose");
+          const lightboxPrev = document.getElementById("lightboxPrev");
+          const lightboxNext = document.getElementById("lightboxNext");
+          let lightboxIndex = 0;
+
+          const showLightboxImage = () => {
+            if (!lightboxImage || galleryImages.length === 0) return;
+            lightboxImage.src = galleryImages[lightboxIndex];
+            lightboxImage.alt = `Imagen ${lightboxIndex + 1} de ${galleryImages.length}`;
+            if (lightboxCounter) {
+              lightboxCounter.textContent =
+                galleryImages.length > 1
+                  ? `${lightboxIndex + 1} / ${galleryImages.length}`
+                  : "";
+            }
+          };
+
+          const openLightbox = (index: number) => {
+            if (!lightbox || galleryImages.length === 0) return;
+            lightboxIndex = index;
+            showLightboxImage();
+            lightbox.classList.remove("hidden");
+            lightbox.classList.add("flex");
+            document.body.style.overflow = "hidden";
+            const multiple = galleryImages.length > 1;
+            lightboxPrev?.classList.toggle("hidden", !multiple);
+            lightboxNext?.classList.toggle("hidden", !multiple);
+          };
+
+          const closeLightbox = () => {
+            if (!lightbox) return;
+            lightbox.classList.add("hidden");
+            lightbox.classList.remove("flex");
+            document.body.style.overflow = "";
+          };
+
+          const showRelative = (delta: number) => {
+            if (galleryImages.length === 0) return;
+            lightboxIndex =
+              (lightboxIndex + delta + galleryImages.length) %
+              galleryImages.length;
+            showLightboxImage();
+          };
+
+          mainImage.style.cursor = "zoom-in";
+          mainImage.addEventListener("click", () => {
+            const idx = galleryImages.indexOf(mainImage.src);
+            openLightbox(idx >= 0 ? idx : 0);
+          });
+
+          thumbnails.forEach((thumbnail, idx) => {
+            thumbnail.addEventListener("click", () => openLightbox(idx));
+          });
+
+          lightboxClose?.addEventListener("click", closeLightbox);
+          lightboxPrev?.addEventListener("click", () => showRelative(-1));
+          lightboxNext?.addEventListener("click", () => showRelative(1));
+          lightbox?.addEventListener("click", (e) => {
+            if (e.target === lightbox) closeLightbox();
+          });
+
+          // Se quita el listener anterior antes de agregar uno nuevo -- este
+          // script corre de nuevo en cada navegación (astro:page-load), pero
+          // `document` persiste entre navegaciones con View Transitions, así
+          // que sin esto se irían acumulando listeners duplicados.
+          if (lightboxKeydownHandler) {
+            document.removeEventListener("keydown", lightboxKeydownHandler);
+          }
+          lightboxKeydownHandler = (e: KeyboardEvent) => {
+            if (!lightbox || lightbox.classList.contains("hidden")) return;
+            if (e.key === "Escape") closeLightbox();
+            else if (e.key === "ArrowLeft") showRelative(-1);
+            else if (e.key === "ArrowRight") showRelative(1);
+          };
+          document.addEventListener("keydown", lightboxKeydownHandler);
+
+          if (thumbnails.length === 0) return;
 
           // Cambiar imagen principal al hacer clic en miniatura
           thumbnails.forEach((thumbnail) => {

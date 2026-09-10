@@ -18,17 +18,21 @@ const isActive = (href: string) => {
   return currentPath.startsWith(href);
 };
 
-const isHome = currentPath === '/';
+// Páginas con una sección de portada oscura arriba (id="hero"): el nav flota
+// en "vidrio" sobre ella y pasa a sólido al hacer scroll. El detalle de
+// propiedad no tiene esa portada, así que se queda sólido siempre.
+const GLASS_NAV_PATHS = ['/', '/servicios', '/propiedades', '/contacto'];
+const isGlassPage = GLASS_NAV_PATHS.includes(currentPath);
 ---
 
 <nav
   id="site-nav"
   class:list={[
     "fixed top-0 left-0 right-0 z-50 transition-colors duration-300",
-    isHome ? "" : "bg-white border-b border-mid/20 shadow-sm",
+    isGlassPage ? "" : "bg-white border-b border-mid/20 shadow-sm",
   ]}
 >
-  {isHome && <div class="nav-scrim" aria-hidden="true"></div>}
+  {isGlassPage && <div class="nav-scrim" aria-hidden="true"></div>}
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
     <div class="flex items-center justify-between h-20">
       <!-- Logo -->
@@ -40,8 +44,8 @@ const isHome = currentPath === '/';
         />
       </a>
 
-      {isHome && (
-        <!-- Glass navigation: visible only while floating over the hero video -->
+      {isGlassPage && (
+        <!-- Glass navigation: visible only while floating over the page's hero section (desktop only) -->
         <>
           <div class="hidden md:flex items-center gap-2 nav-glass-group">
             {navLinks.map((link) => (
@@ -53,7 +57,7 @@ const isHome = currentPath === '/';
               </a>
             ))}
           </div>
-          <div class="flex items-center gap-3 nav-glass-group">
+          <div class="hidden md:flex items-center gap-3 nav-glass-group">
             <div class="hidden md:block">
               <LanguageSwitch variant="glass" />
             </div>
@@ -64,8 +68,8 @@ const isHome = currentPath === '/';
         </>
       )}
 
-      <!-- Solid navigation: default everywhere else, and on home once scrolled past the hero -->
-      <div class:list={["hidden md:flex items-center space-x-1", isHome && "nav-solid-group"]}>
+      <!-- Solid navigation: default everywhere else, and on glass pages once scrolled past the hero -->
+      <div class:list={["hidden md:flex items-center space-x-1", isGlassPage && "nav-solid-group"]}>
         {navLinks.map((link) => (
           <a
             href={link.href}
@@ -88,7 +92,7 @@ const isHome = currentPath === '/';
       </div>
 
       <!-- Language Switch + CTA Button (grouped so they stay snug together) -->
-      <div class:list={["flex items-center gap-3", isHome && "nav-solid-group"]}>
+      <div class:list={["hidden md:flex items-center gap-3", isGlassPage && "nav-solid-group"]}>
         <div class="hidden md:block">
           <LanguageSwitch />
         </div>
@@ -102,12 +106,12 @@ const isHome = currentPath === '/';
       </div>
 
       <!-- Mobile Menu Button wrapped in React Component (always rendered once; styles itself for glass vs solid) -->
-      <NavbarMobile client:visible navLinks={navLinks} currentPath={currentPath} lang={lang} homeGlass={isHome} />
+      <NavbarMobile client:visible navLinks={navLinks} currentPath={currentPath} lang={lang} homeGlass={isGlassPage} />
     </div>
   </div>
 </nav>
 
-{isHome && (
+{isGlassPage && (
   <script>
     (function () {
       const nav = document.getElementById("site-nav");
@@ -179,13 +183,6 @@ const isHome = currentPath === '/';
     font-weight: 600;
   }
 
-  /* Home page: glass nav visible at top, swaps to the standard solid nav once scrolled */
-  .nav-glass-group {
-    display: flex;
-  }
-  .nav-solid-group {
-    display: none;
-  }
   #site-nav.scrolled {
     background: #fff;
     border-bottom: 1px solid rgba(141, 169, 196, 0.2);
@@ -194,10 +191,25 @@ const isHome = currentPath === '/';
   #site-nav.scrolled .nav-scrim {
     opacity: 0;
   }
-  #site-nav.scrolled .nav-glass-group {
-    display: none;
-  }
-  #site-nav.scrolled .nav-solid-group {
-    display: flex;
+
+  /* Glass pages: glass nav visible at top, swaps to the standard solid nav
+     once scrolled past the hero -- desktop only. These rules used to apply
+     unconditionally, and being scoped Astro styles they out-specificity
+     Tailwind's `hidden` utility, so the glass pills stayed visible (and
+     overflowed) on mobile too. Gating them behind this media query lets
+     `hidden md:flex` control mobile as intended, leaving only the hamburger. */
+  @media (min-width: 768px) {
+    .nav-glass-group {
+      display: flex;
+    }
+    .nav-solid-group {
+      display: none;
+    }
+    #site-nav.scrolled .nav-glass-group {
+      display: none;
+    }
+    #site-nav.scrolled .nav-solid-group {
+      display: flex;
+    }
   }
 </style>
