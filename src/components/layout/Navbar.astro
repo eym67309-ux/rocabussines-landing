@@ -105,8 +105,11 @@ const isGlassPage = GLASS_NAV_PATHS.includes(currentPath);
         </a>
       </div>
 
-      <!-- Mobile Menu Button wrapped in React Component (always rendered once; styles itself for glass vs solid) -->
-      <NavbarMobile client:visible navLinks={navLinks} currentPath={currentPath} lang={lang} homeGlass={isGlassPage} />
+      <!-- Mobile Menu Button wrapped in React Component (always rendered once; styles itself for glass vs solid).
+           client:load (not client:visible): this button lives in the persistent header, already visible on
+           first paint everywhere, and Astro wraps islands in a `display:contents` element that some browsers
+           never report as intersecting -- client:visible could leave the menu unresponsive indefinitely. -->
+      <NavbarMobile client:load navLinks={navLinks} currentPath={currentPath} lang={lang} homeGlass={isGlassPage} />
     </div>
   </div>
 </nav>

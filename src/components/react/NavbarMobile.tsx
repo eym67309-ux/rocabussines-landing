@@ -103,122 +103,76 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
         </div>
       </button>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu: a dropdown of pill-shaped links anchored under the button,
+          not a full-screen takeover -- keeps the page visible behind it. */}
       {mounted && (
-        <div
-          className={`fixed inset-0 z-[60] md:hidden transition-all duration-500 ${
-            isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-          }`}
-          role="dialog"
-          aria-modal="true"
-          aria-label={dict.nav.menuLabel}
-        >
-          {/* Overlay */}
+        <>
+          {/* Invisible backdrop: catches outside taps to close, no dark tint */}
           <div
-            className={`absolute inset-0 bg-black/45 backdrop-blur-sm transition-opacity duration-400 ${
-              isOpen ? 'opacity-100' : 'opacity-0'
-            }`}
+            className={`fixed inset-0 z-[59] md:hidden ${isOpen ? '' : 'pointer-events-none'}`}
             onClick={closeMenu}
             aria-hidden="true"
           />
 
-          {/* Panel */}
           <div
-            className={`relative h-full bg-gradient-to-b from-deepest via-dark to-deepest text-light transition-all duration-500 ${
-              isOpen ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+            className={`fixed right-4 top-24 z-[60] w-64 origin-top-right rounded-3xl border border-white/10 bg-deepest/95 p-3 shadow-2xl backdrop-blur-md transition-all duration-200 ease-out md:hidden ${
+              isOpen ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'
             }`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={dict.nav.menuLabel}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between h-20 px-6 border-b border-light/10">
-              <a href="/" onClick={closeMenu} className="flex items-center">
-                <img
-                  src="https://res.cloudinary.com/dxrzwnjee/image/upload/v1771884590/uvefdfzsi4qau4np6gx5.avif"
-                  alt="Roca Business Logo"
-                  className="h-12 w-auto"
-                />
+            {/* Navigation Links */}
+            <nav className="flex flex-col gap-1.5" aria-label={dict.nav.menuLabel}>
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={closeMenu}
+                  className={`nav-bubble rounded-full px-5 py-3 text-center font-heading text-base font-medium transition-colors duration-200 ${
+                    isActive(link.href)
+                      ? 'bg-white/15 text-white'
+                      : 'text-light/80 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {link.name}
+                </a>
+              ))}
+            </nav>
+
+            {/* Bottom Actions */}
+            <div className="mt-3 space-y-3 border-t border-light/10 pt-3">
+              <a
+                href="/solicitudes"
+                onClick={closeMenu}
+                className="block rounded-full bg-primary px-5 py-3 text-center font-heading font-semibold text-white transition-colors duration-200 hover:bg-light hover:text-deepest"
+              >
+                {dict.nav.cta}
               </a>
 
-              <button
-                onClick={closeMenu}
-                className="p-2 rounded-lg text-light hover:bg-light/10 transition-colors"
-                aria-label={dict.nav.closeMenu}
-                type="button"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="h-[calc(100%-5rem)] flex flex-col justify-between px-8 py-10">
-              {/* Navigation Links */}
-              <div className="flex-1 flex items-center justify-center">
-                <nav className="w-full max-w-xs space-y-6 text-center">
-                  {navLinks.map((link, index) => (
-                    <a
-                      key={link.href}
-                      href={link.href}
-                      onClick={closeMenu}
-                      className={`block font-heading text-4xl leading-tight transition-all duration-300 menu-link ${
-                        isOpen
-                          ? 'opacity-100 translate-y-0'
-                          : 'opacity-0 translate-y-4 pointer-events-none'
-                      } ${
-                        isActive(link.href) ? 'text-white' : 'text-light/80 hover:text-white'
-                      }`}
-                      style={{
-                        transitionDelay: isOpen ? `${0.2 + index * 0.1}s` : '0s',
-                      }}
-                    >
-                      {link.name}
-                    </a>
-                  ))}
-                </nav>
-              </div>
-
-              {/* Bottom Actions */}
-              <div
-                className={`space-y-5 pb-4 transition-all duration-300 ${
-                  isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-                }`}
-                style={{
-                  transitionDelay: isOpen ? '0.6s' : '0s',
-                }}
-              >
-                <a
-                  href="/solicitudes"
-                  onClick={closeMenu}
-                  className="block w-full px-4 py-3 bg-primary text-white text-center font-heading rounded-lg transition-all duration-300 hover:bg-light hover:text-deepest"
-                >
-                  {dict.nav.cta}
-                </a>
-
+              <div className="flex items-center justify-between gap-3">
                 <div
-                  className="inline-flex items-center gap-0.5 rounded-full bg-white/15 p-1 font-heading mx-auto w-fit"
+                  className="inline-flex items-center gap-0.5 rounded-full bg-white/15 p-1 font-heading"
                   role="group"
                   aria-label="Language / Idioma"
                 >
                   <a
                     href="?lang=es"
+                    data-astro-reload
                     className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'es' ? 'bg-white text-deepest shadow-sm' : 'text-white/60 hover:text-white'}`}
                   >
                     ES
                   </a>
                   <a
                     href="?lang=en"
+                    data-astro-reload
                     className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'en' ? 'bg-white text-deepest shadow-sm' : 'text-white/60 hover:text-white'}`}
                   >
                     EN
                   </a>
                 </div>
 
-                <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-2">
                   {socialLinks.map((social) => (
                     <a
                       key={social.name}
@@ -226,17 +180,17 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
                       target="_blank"
                       rel="noreferrer"
                       aria-label={social.name}
-                      className="h-10 w-10 rounded-full border border-light/25 text-light/85 flex items-center justify-center hover:text-white hover:border-light/60 hover:bg-light/10 transition-all duration-300"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-light/25 text-light/85 transition-all duration-200 hover:border-light/60 hover:bg-light/10 hover:text-white"
                     >
                       {social.name === 'Instagram' && (
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <rect x="3" y="3" width="18" height="18" rx="5" ry="5" strokeWidth="2"></rect>
                           <path d="M16 11.37a4 4 0 11-7.9 1.18 4 4 0 017.9-1.18z" strokeWidth="2"></path>
                           <line x1="17.5" y1="6.5" x2="17.5" y2="6.5" strokeWidth="2" strokeLinecap="round"></line>
                         </svg>
                       )}
                       {social.name === 'Facebook' && (
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M22 12a10 10 0 10-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.5-3.88 3.78-3.88 1.1 0 2.24.2 2.24.2v2.46H15.2c-1.24 0-1.62.77-1.62 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0022 12z"></path>
                         </svg>
                       )}
@@ -246,16 +200,8 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
-
-      <style>{`
-        .menu-link {
-          transition-property: opacity, transform;
-          transition-timing-function: cubic-bezier(0.22, 0.03, 0.26, 1);
-          transition-duration: 0.5s;
-        }
-      `}</style>
     </>
   );
 }
