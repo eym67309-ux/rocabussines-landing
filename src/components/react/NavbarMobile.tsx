@@ -72,36 +72,63 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
 
   return (
     <>
-      {/* Hamburger Button */}
-      <button
-        onClick={toggleMenu}
-        className={`md:hidden relative w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 ${
-          glassMode
-            ? 'text-[#eef4ed] bg-white/10 border border-white/25 backdrop-blur-sm hover:bg-white/20'
-            : 'text-deepest hover:bg-mid/10 rounded-lg'
-        }`}
-        aria-label={isOpen ? dict.nav.closeMenu : dict.nav.openMenu}
-        aria-expanded={isOpen}
-        type="button"
-      >
-        <div className="w-6 flex flex-col items-center justify-center gap-1.5">
-          <span
-            className={`w-full h-0.5 bg-current transition-all duration-300 ease-out ${
-              isOpen ? 'rotate-45 translate-y-2' : ''
-            }`}
-          />
-          <span
-            className={`w-full h-0.5 bg-current transition-all duration-200 ${
-              isOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
-            }`}
-          />
-          <span
-            className={`w-full h-0.5 bg-current transition-all duration-300 ease-out ${
-              isOpen ? '-rotate-45 -translate-y-2' : ''
-            }`}
-          />
+      {/* Language switch + hamburger, side by side: language is reachable
+          without opening the menu at all, so it comes first. */}
+      <div className="flex items-center gap-2 md:hidden">
+        <div
+          className={`inline-flex items-center gap-0.5 rounded-full p-1 font-heading transition-colors duration-300 ${
+            glassMode ? 'bg-white/10 border border-white/25 backdrop-blur-sm' : 'bg-deepest'
+          }`}
+          role="group"
+          aria-label="Language / Idioma"
+        >
+          <a
+            href="?lang=es"
+            data-astro-reload
+            className={`rounded-full px-2.5 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'es' ? 'bg-white text-deepest shadow-sm' : glassMode ? 'text-[#eef4ed]/70 hover:text-[#eef4ed]' : 'text-white/60 hover:text-white'}`}
+          >
+            ES
+          </a>
+          <a
+            href="?lang=en"
+            data-astro-reload
+            className={`rounded-full px-2.5 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'en' ? 'bg-white text-deepest shadow-sm' : glassMode ? 'text-[#eef4ed]/70 hover:text-[#eef4ed]' : 'text-white/60 hover:text-white'}`}
+          >
+            EN
+          </a>
         </div>
-      </button>
+
+        {/* Hamburger Button */}
+        <button
+          onClick={toggleMenu}
+          className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 ${
+            glassMode
+              ? 'text-[#eef4ed] bg-white/10 border border-white/25 backdrop-blur-sm hover:bg-white/20'
+              : 'text-deepest hover:bg-mid/10 rounded-lg'
+          }`}
+          aria-label={isOpen ? dict.nav.closeMenu : dict.nav.openMenu}
+          aria-expanded={isOpen}
+          type="button"
+        >
+          <div className="w-6 flex flex-col items-center justify-center gap-1.5">
+            <span
+              className={`w-full h-0.5 bg-current transition-all duration-300 ease-out ${
+                isOpen ? 'rotate-45 translate-y-2' : ''
+              }`}
+            />
+            <span
+              className={`w-full h-0.5 bg-current transition-all duration-200 ${
+                isOpen ? 'opacity-0 scale-0' : 'opacity-100 scale-100'
+              }`}
+            />
+            <span
+              className={`w-full h-0.5 bg-current transition-all duration-300 ease-out ${
+                isOpen ? '-rotate-45 -translate-y-2' : ''
+              }`}
+            />
+          </div>
+        </button>
+      </div>
 
       {/* Mobile Menu: a dropdown of pill-shaped links anchored under the button,
           not a full-screen takeover -- keeps the page visible behind it. */}
@@ -128,6 +155,7 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
                 <a
                   key={link.href}
                   href={link.href}
+                  data-astro-reload
                   onClick={closeMenu}
                   className={`nav-bubble rounded-full px-5 py-3 text-center font-heading text-base font-medium transition-colors duration-200 ${
                     isActive(link.href)
@@ -150,29 +178,7 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
                 {dict.nav.cta}
               </a>
 
-              <div className="flex items-center justify-between gap-3">
-                <div
-                  className="inline-flex items-center gap-0.5 rounded-full bg-white/15 p-1 font-heading"
-                  role="group"
-                  aria-label="Language / Idioma"
-                >
-                  <a
-                    href="?lang=es"
-                    data-astro-reload
-                    className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'es' ? 'bg-white text-deepest shadow-sm' : 'text-white/60 hover:text-white'}`}
-                  >
-                    ES
-                  </a>
-                  <a
-                    href="?lang=en"
-                    data-astro-reload
-                    className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide transition-colors duration-200 ${lang === 'en' ? 'bg-white text-deepest shadow-sm' : 'text-white/60 hover:text-white'}`}
-                  >
-                    EN
-                  </a>
-                </div>
-
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                   {socialLinks.map((social) => (
                     <a
                       key={social.name}
@@ -196,7 +202,6 @@ export default function NavbarMobile({ navLinks, currentPath, lang = 'es', homeG
                       )}
                     </a>
                   ))}
-                </div>
               </div>
             </div>
           </div>

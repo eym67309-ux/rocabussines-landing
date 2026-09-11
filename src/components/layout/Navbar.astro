@@ -45,12 +45,16 @@ const isGlassPage = GLASS_NAV_PATHS.includes(currentPath);
       </a>
 
       {isGlassPage && (
-        <!-- Glass navigation: visible only while floating over the page's hero section (desktop only) -->
+        <!-- Glass navigation: visible only while floating over the page's hero section (desktop only).
+             data-astro-reload on every nav link below: a soft client-side transition back to the home
+             page can leave its autoplaying hero video paused with no autoplay policy allowing it to
+             restart -- a full reload always gets a fresh, reliably autoplaying video. -->
         <>
           <div class="hidden md:flex items-center gap-2 nav-glass-group">
             {navLinks.map((link) => (
               <a
                 href={link.href}
+                data-astro-reload
                 class:list={["nav-pill", isActive(link.href) && "nav-pill--active"]}
               >
                 {link.name}
@@ -73,6 +77,7 @@ const isGlassPage = GLASS_NAV_PATHS.includes(currentPath);
         {navLinks.map((link) => (
           <a
             href={link.href}
+            data-astro-reload
             class:list={[
               "relative px-4 py-2 font-heading text-deepest transition-colors duration-300",
               "hover:text-primary",

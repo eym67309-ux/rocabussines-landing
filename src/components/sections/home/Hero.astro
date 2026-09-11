@@ -113,6 +113,25 @@ const dict = Astro.locals.dict;
             }
           });
         })();
+
+        // Main nav links force a full reload (see Navbar.astro) specifically so
+        // returning to this page always gets a fresh, reliably autoplaying
+        // video. The browser's back/forward buttons still go through Astro's
+        // client-side transition though (data-astro-reload only affects direct
+        // link clicks) -- confirmed by instrumenting HTMLMediaElement.pause
+        // that some browsers silently halt this video's playback shortly after
+        // such a transition, with no scripted .pause() call involved. This is
+        // a self-healing fallback for that path: if the browser ever pauses
+        // the video outside of it actually ending, try to resume it.
+        (function () {
+          const video = document.getElementById("hero-video");
+          if (!(video instanceof HTMLVideoElement)) return;
+          const resume = () => {
+            if (!video.ended) video.play().catch(() => {});
+          };
+          video.addEventListener("pause", resume);
+          resume();
+        })();
       </script>
     </div>
   </div>
