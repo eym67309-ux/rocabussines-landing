@@ -1,0 +1,64 @@
+---
+// Capa de video de fondo reutilizable para el hero de una pagina -- mismo
+// patron que ya usa Home (Hero.astro), pero sin el loader de pagina, la
+// animacion de texto, ni el truco de recarga completa al navegar (eso es
+// especifico de Inicio para garantizar el autoplay al volver; en el resto
+// del sitio la transicion de Astro es normal y no lo necesita).
+interface Props {
+  videoId: string; // public_id dentro de roca-business/hero-videos (o el de Inicio, ver "reverse")
+  alt: string;
+  /** Reproduce el video al reves via el efecto e_reverse de Cloudinary --
+   * genera un archivo nuevo con los cuadros invertidos, no es un truco de CSS. */
+  reverse?: boolean;
+}
+
+const { videoId, alt, reverse = false } = Astro.props;
+const base = `https://res.cloudinary.com/dnziwpiec/video/upload`;
+const reverseSegment = reverse ? "e_reverse/" : "";
+// q_auto comprimia demasiado agresivo para las tomas aereas cortas (bajaba de
+// ~22 Mbps de origen a ~1.9 Mbps, se veia borroso) -- q_90 lo deja en ~5 Mbps,
+// bastante mas nitido, con un peso todavia razonable. El video de Inicio
+// reusado aqui (reverse=true) es mucho mas largo (30s): a q_90 pesa ~49MB, asi
+// que para ese caso se usa q_auto -- la misma calidad con la que ya se ve bien
+// en Inicio, en ~15MB.
+const quality = reverse ? "q_auto" : "q_90";
+const posterUrl = `${base}/${reverseSegment}f_auto,w_1920,${quality},so_0s/${videoId}.jpg`;
+const videoUrl = `${base}/${reverseSegment}f_auto,${quality},w_1920,h_1080,c_fill/${videoId}.mp4`;
+---
+
+<div class="absolute inset-0 z-0">
+  <video
+    data-hero-video
+    autoplay
+    muted
+    loop
+    playsinline
+    preload="auto"
+    poster={posterUrl}
+    class="absolute inset-0 w-full h-full object-cover"
+  >
+    <source src={videoUrl} type="video/mp4" />
+    <img
+      src={posterUrl}
+      alt={alt}
+      class="absolute inset-0 w-full h-full object-cover"
+    />
+  </video>
+</div>
+
+<script>
+  // Igual que en Inicio: si el navegador llega a pausar el video sin que
+  // haya terminado (algunos navegadores lo hacen tras una transicion de
+  // Astro), se reanuda solo.
+  function bindHeroVideoResume() {
+    const video = document.querySelector("[data-hero-video]");
+    if (!(video instanceof HTMLVideoElement)) return;
+    const resume = () => {
+      if (!video.ended) video.play().catch(() => {});
+    };
+    video.addEventListener("pause", resume);
+    resume();
+  }
+  bindHeroVideoResume();
+  document.addEventListener("astro:page-load", bindHeroVideoResume);
+</script>

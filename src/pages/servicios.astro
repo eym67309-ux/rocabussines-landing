@@ -4,6 +4,7 @@ export const prerender = false;
 
 import Layout from "../layouts/Layout.astro";
 import SectionBlobs from "../components/layout/SectionBlobs.astro";
+import HeroVideo from "../components/sections/HeroVideo.astro";
 import { getAllActiveServices } from "../lib/queries/services";
 import type { HomeService } from "../types/service";
 
@@ -62,9 +63,10 @@ function getGridClass(index: number, total: number): string {
     <!-- Hero Section -->
     <section
       id="hero"
-      class="relative isolate overflow-hidden bg-gradient-to-br from-deepest via-primary to-dark pb-24 pt-32 sm:pt-36 lg:pt-40"
+      class="relative isolate overflow-hidden bg-gradient-to-br from-deepest via-primary to-dark pb-24 pt-32 sm:pt-36 lg:pt-40 min-h-screen lg:min-h-0 flex flex-col justify-center"
     >
-      <div class="pointer-events-none absolute inset-0 opacity-20 bg-white">
+      <HeroVideo videoId="hero-roca-business_eoenwy" alt="Roca Business - Servicios" reverse />
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-deepest/30 via-deepest/15 to-deepest/35">
       </div>
 
       <div class="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

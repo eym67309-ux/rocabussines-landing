@@ -4,6 +4,7 @@ export const prerender = false;
 
 import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
+import HeroVideo from "../../components/sections/HeroVideo.astro";
 import PropertyFilters from "../../components/react/PropertyFilters";
 import { getCatalogProperties } from "../../lib/queries/properties";
 import { formatPrice } from "../../utils/formatPrice";
@@ -54,11 +55,10 @@ const properties = await getCatalogProperties(
   <main class="bg-[#F5F7FA]">
     <section
       id="hero"
-      class="relative isolate overflow-hidden bg-gradient-to-br from-primary via-deepest to-black pb-28 pt-28  sm:pt-32 lg:pt-36"
+      class="relative isolate overflow-hidden bg-gradient-to-br from-primary via-deepest to-black pb-28 pt-28  sm:pt-32 lg:pt-36 min-h-screen lg:min-h-0 flex flex-col justify-center"
     >
-      <div
-        class="pointer-events-none absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_12%_30%,rgba(255,255,255,0.4),transparent_40%),radial-gradient(circle_at_88%_78%,rgba(255,255,255,0.35),transparent_35%)]"
-      >
+      <HeroVideo videoId="roca-business/hero-videos/hero-propiedades" alt="Roca Business - Propiedades" />
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-deepest/30 via-deepest/15 to-deepest/35">
       </div>
 
       <!-- Capa adicional de degradado para más profundidad -->
