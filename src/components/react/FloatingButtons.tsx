@@ -31,6 +31,7 @@ export default function FloatingButtons({ lang = "es" }: FloatingButtonsProps) {
   const handleWhatsApp = () => {
     // Número de WhatsApp de Roca Business
     // Formato: código país + número sin signos (+506 XXXX-XXXX → 506XXXXXXXX)
+    window.rocaTrack?.("whatsapp_click");
     const phoneNumber = "50670442878";
     const message = encodeURIComponent(dict.floatingButtons.whatsappMessage);
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, "_blank");

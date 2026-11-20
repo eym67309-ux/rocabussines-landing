@@ -147,6 +147,7 @@ export default function ContactForm({ propertyId, propertyTitle, propertyPrice, 
         // No fallar la operación si el correo falla
       }
 
+      window.rocaTrack?.('form_submit', { propertyId: propertyId ?? null });
       setSubmitStatus('success');
       setFormData({
         fullName: '',

@@ -26,6 +26,9 @@ export const es = {
     address: "Liberia, Guanacaste, Costa Rica",
     rights: "Todos los derechos reservados.",
     developedBy: "Desarrollado por One Out",
+    analyticsNotice:
+      "Este sitio mide las visitas de forma anónima, sin cookies de seguimiento ni guardar tu dirección IP.",
+    privacyLink: "Política de privacidad",
   },
   hero: {
     titleLine1: "Bienes Raíces en Guanacaste,",

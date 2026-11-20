@@ -1,5 +1,6 @@
 ---
 const dict = Astro.locals.dict;
+const analyticsEnabled = import.meta.env.PUBLIC_ANALYTICS_ENABLED === "true";
 
 const quickLinks = [
   { label: dict.nav.home, href: "/" },
@@ -176,9 +177,21 @@ const socialLinks = [
     <div
       class="mt-12 pt-6 border-t border-light/15 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
     >
-      <p class="text-sm font-heading text-light/65">
-        © {new Date().getFullYear()} Roca Business. {dict.footer.rights}
-      </p>
+      <div class="flex flex-col gap-1">
+        <p class="text-sm font-heading text-light/65">
+          © {new Date().getFullYear()} Roca Business. {dict.footer.rights}
+        </p>
+        {
+          analyticsEnabled && (
+            <p class="text-xs font-heading text-light/50 pr-16 sm:pr-0">
+              {dict.footer.analyticsNotice}{" "}
+              <a href="/privacidad" class="underline hover:text-light">
+                {dict.footer.privacyLink}
+              </a>
+            </p>
+          )
+        }
+      </div>
 
       <a
         href="https://www.instagram.com/one.out_/"
