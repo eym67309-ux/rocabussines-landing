@@ -28,9 +28,6 @@ export const en: Dictionary = {
     address: "Liberia, Guanacaste, Costa Rica",
     rights: "All rights reserved.",
     developedBy: "Developed by One Out",
-    analyticsNotice:
-      "This site measures visits anonymously, with no tracking cookies and without storing your IP address.",
-    privacyLink: "Privacy policy",
   },
   hero: {
     titleLine1: "Real Estate in Guanacaste,",

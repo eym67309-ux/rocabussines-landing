@@ -1,16 +1,8 @@
-// Medicion propia y anonima de visitas (ver /privacidad y src/pages/api/track.ts).
+// Medicion propia de visitas (ver src/pages/api/track.ts). Solo cuenta paginas vistas.
 // - Sin cookies: solo un codigo al azar en sessionStorage que se borra al cerrar la pestana.
 // - Respeta "No rastrear" (DNT) y el control global de privacidad (GPC).
 // - Equipo interno: abrir cualquier pagina con ?notrack=1 para no contarse (?notrack=0 lo revierte).
-// - Solo funciona si PUBLIC_ANALYTICS_ENABLED=true (se activa tras la revision legal).
-
-export type TrackEvent = "page_view" | "whatsapp_click" | "form_submit";
-
-declare global {
-  interface Window {
-    rocaTrack?: (event: TrackEvent, extra?: { propertyId?: string | null }) => void;
-  }
-}
+// - Solo funciona si PUBLIC_ANALYTICS_ENABLED=true.
 
 const SID_KEY = "roca_sid";
 const ATTR_KEY = "roca_attr";
@@ -19,9 +11,6 @@ const PROPERTY_PATH_RE = /^\/propiedades\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[
 
 type Attribution = {
   utm_source: string | null;
-  utm_medium: string | null;
-  utm_campaign: string | null;
-  utm_content: string | null;
   referrer_host: string | null;
 };
 
@@ -70,13 +59,7 @@ function attribution(): Attribution {
   } catch {
     /* referrer invalido: queda como directo */
   }
-  const attr: Attribution = {
-    utm_source: q.get("utm_source"),
-    utm_medium: q.get("utm_medium"),
-    utm_campaign: q.get("utm_campaign"),
-    utm_content: q.get("utm_content"),
-    referrer_host: referrerHost,
-  };
+  const attr: Attribution = { utm_source: q.get("utm_source"), referrer_host: referrerHost };
   try {
     sessionStorage.setItem(ATTR_KEY, JSON.stringify(attr));
   } catch {
@@ -85,17 +68,14 @@ function attribution(): Attribution {
   return attr;
 }
 
-function send(event: TrackEvent, extra?: { propertyId?: string | null }) {
+function sendPageView() {
   if (isOptedOut()) return;
   const sid = sessionId();
   if (!sid) return;
-  const fromPath = location.pathname.match(PROPERTY_PATH_RE)?.[1] ?? null;
   const body = JSON.stringify({
-    event,
     sid,
     path: location.pathname,
-    propertyId: extra?.propertyId ?? fromPath,
-    lang: document.documentElement.lang || null,
+    propertyId: location.pathname.match(PROPERTY_PATH_RE)?.[1] ?? null,
     ...attribution(),
   });
   fetch("/api/track", {
@@ -107,22 +87,20 @@ function send(event: TrackEvent, extra?: { propertyId?: string | null }) {
 }
 
 if (import.meta.env.PUBLIC_ANALYTICS_ENABLED === "true") {
-  window.rocaTrack = send;
-
   // El sitio cambia de pagina sin recargar (transiciones de Astro): hay que
   // contar en cada "astro:page-load", no solo en la primera carga.
   let counted = false;
   document.addEventListener("astro:page-load", () => {
     counted = true;
-    send("page_view");
+    sendPageView();
   });
   // Red de seguridad: si "astro:page-load" salio antes de que este script se
   // registrara, la primera carga se cuenta cuando termina de cargar. Si el aviso
-  // ya llego, no se cuenta de nuevo (antes se duplicaba la visita inicial).
+  // ya llego, no se cuenta de nuevo.
   const fallback = () => {
     if (counted) return;
     counted = true;
-    send("page_view");
+    sendPageView();
   };
   if (document.readyState === "complete") fallback();
   else window.addEventListener("load", fallback, { once: true });
