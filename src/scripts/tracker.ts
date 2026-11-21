@@ -12,6 +12,9 @@ const PROPERTY_PATH_RE = /^\/propiedades\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[
 type Attribution = {
   utm_source: string | null;
   referrer_host: string | null;
+  // Solo "sí/no": Facebook agrega solo ?fbclid=... a los enlaces que salen de Facebook
+  // e Instagram. Lo único que nos sirve es saber que venía; el código en sí no se envía ni se guarda.
+  fb_click: boolean;
 };
 
 function isOptedOut(): boolean {
@@ -59,7 +62,11 @@ function attribution(): Attribution {
   } catch {
     /* referrer invalido: queda como directo */
   }
-  const attr: Attribution = { utm_source: q.get("utm_source"), referrer_host: referrerHost };
+  const attr: Attribution = {
+    utm_source: q.get("utm_source"),
+    referrer_host: referrerHost,
+    fb_click: !!q.get("fbclid"),
+  };
   try {
     sessionStorage.setItem(ATTR_KEY, JSON.stringify(attr));
   } catch {

@@ -20,7 +20,20 @@ const noContent = () => new Response(null, { status: 204 });
 const clip = (v: unknown, max = 120): string | null =>
   typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null;
 
-function sourceOf(utmSource: string | null, referrerHost: string | null): string {
+// Navegadores internos de las apps de Meta: la persona abrió el enlace DENTRO de la app.
+// Facebook: FBAN / FBAV / FB_IAB / FBIOS (Messenger usa los mismos). Instagram: "Instagram".
+const FB_APP_RE = /FBAN|FBAV|FB_IAB|FBIOS/;
+const IG_APP_RE = /Instagram/;
+
+// Orden de decisión (de más a menos confiable):
+//  1. Etiqueta explícita en el enlace (?utm_source=...).
+//  2. Sitio de donde viene la persona (referrer) si es Facebook, Instagram, Google o WhatsApp.
+//  3. Navegador interno de la app de Facebook / Instagram.
+//  4. fbclid: Facebook lo agrega solo a los enlaces que salen de Facebook... e Instagram también
+//     lo hace, por eso va DESPUÉS de las señales que distinguen una de otra. Y como un enlace con
+//     fbclid puede copiarse y pegarse en WhatsApp o en Google, un origen claro de esos gana.
+//  5. Cualquier otro sitio ("other") o directo.
+function sourceOf(utmSource: string | null, referrerHost: string | null, fbClick: boolean, ua: string): string {
   const u = (utmSource ?? "").toLowerCase();
   if (u) {
     if (/^(facebook|fb)$/.test(u)) return "facebook";
@@ -30,12 +43,17 @@ function sourceOf(utmSource: string | null, referrerHost: string | null): string
     return "other";
   }
   const h = (referrerHost ?? "").toLowerCase();
-  if (!h) return "direct";
-  if (/(^|\.)(facebook\.com|fb\.com|fb\.me|messenger\.com)$/.test(h)) return "facebook";
-  if (/(^|\.)instagram\.com$/.test(h)) return "instagram";
-  if (/(^|\.)google\.[a-z.]+$/.test(h)) return "google";
-  if (/(^|\.)(whatsapp\.com|wa\.me)$/.test(h)) return "whatsapp";
-  return "other";
+  if (h) {
+    if (/(^|\.)(facebook\.com|fb\.com|fb\.me|messenger\.com)$/.test(h)) return "facebook";
+    if (/(^|\.)instagram\.com$/.test(h)) return "instagram";
+    if (/(^|\.)google\.[a-z.]+$/.test(h)) return "google";
+    if (/(^|\.)(whatsapp\.com|wa\.me)$/.test(h)) return "whatsapp";
+  }
+  // Instagram primero: algunas versiones de su navegador interno también traen marcas "FB..."
+  if (IG_APP_RE.test(ua)) return "instagram";
+  if (FB_APP_RE.test(ua)) return "facebook";
+  if (fbClick) return "facebook";
+  return h ? "other" : "direct";
 }
 
 let client: SupabaseClient | null = null;
@@ -80,7 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
       session_id: sid,
       path,
       property_id: propertyId,
-      source: sourceOf(clip(b.utm_source), clip(b.referrer_host)),
+      source: sourceOf(clip(b.utm_source), clip(b.referrer_host), b.fb_click === true, ua),
     };
 
     const supabase = db();
