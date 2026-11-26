@@ -101,6 +101,26 @@ export const POST: APIRoute = async ({ request }) => {
       source: sourceOf(clip(b.utm_source), clip(b.referrer_host), b.fb_click === true, ua),
     };
 
+    // TEMPORAL (diagnostico): anota en los registros de Vercel, que se borran solos en ~1 hora
+    // y NO van a la base, con que navegador llega cada visita. Sirve para reconocer al visitante
+    // automatico de Meta que abre el enlace al publicar. Sin IP. Se quita despues de la captura.
+    console.log(
+      "[diag-meta]",
+      JSON.stringify({
+        src: row.source,
+        ua,
+        ref: clip(b.referrer_host),
+        utm: clip(b.utm_source),
+        fbclid: b.fb_click === true,
+        country: request.headers.get("x-vercel-ip-country"),
+        lang: request.headers.get("accept-language"),
+        fetchSite: request.headers.get("sec-fetch-site"),
+        headers: [...request.headers.keys()].sort().join(","),
+        path,
+        sid8: sid.slice(0, 8),
+      })
+    );
+
     const supabase = db();
     if (!supabase) {
       console.error("[track] Falta SUPABASE_SERVICE_ROLE_KEY");
